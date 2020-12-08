@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 30, left: 60},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+    // append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+//Read the data
+d3.csv("https://raw.githubusercontent.com/Aurbcd/vgvg/main/vg.csv", function(data) {
+
+// Add X axis
+  var x = d3.scaleLinear()
+    .domain([1979, 2014])
+    .range([ 0, width ]);
+
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x).tickFormat(d3.format(".5")));
+  svg.append("g")
+     .call(d3.zoom().on("zoom", function () {
+       svg.attr("transform", d3.event.transform)
+    }));
+
+
+  // Add Y axis
+  var y = d3.scaleLinear()
+    .domain([0, 100])
+    .range([ height, 0]);
+  svg.append("g")
+    .call(d3.axisLeft(y));
+
+  // Highlight the specie that is hovered
+  var highlight = function(d){
+
+    selected_Publisher = d.Publisher
+
+    d3.selectAll(".dot")
+      .transition()
+      .duration(100)
+      .style("fill", "lightgrey")
+    d3.selectAll("." + selected_Publisher.replace(/ .*/,''))
+      .raise()
+      .transition()
+      .duration(100)
+      .attr("r", 2)
+  }
+    
+    // Highlight the specie that is hovered
+  var doNotHighlight = function(){
+    d3.selectAll(".dot")
+      .transition()
+      .duration(100)
+      .attr("r", 1.5)
+      .style("fill", function (d) { return color(d.Publisher); })
+  }
+    
+  // Highlight legend
+  var highlightLegend = function(d){
+
+    selected_Publisher =   d.Publisher
+    d3.selectAll(".dot")
+      .transition()
+      .duration(100)
+      .style("fill", "lightgrey")
+
+    d3.selectAll("." + selected_Publisher.replace(/ .*/,''))
+      .raise()
+      .transition()
+      .duration(100)
+      .attr("r", 2)
+  }
+  
+  // Highlight the specie that is hovered
+  var doNotHighlightLegend = function(d){
+  
+    selected_Publisher = d.Publisher
+
+    d3.selectAll(".dot")
+      .transition()
+      .duration(100)
+      .attr("r", 1.5)
+      .style("fill", function (d) { return color(d.Publisher); })
+  }
+    
+
+   // Color scale: give me a specie name, I return a color
+  var color = d3.scaleOrdinal()
+    .domain(["Nintendo", "Electronic Arts", "Activision",
+       "Sony Computer Entertainment", 'Ubisoft'])
+    .range([ "#F8766D", "#00BA38", "#619CFF", "#B47D07", "#FF33F3"])
+
+  // Add dots
+  svg.append('g')
+    .selectAll("dot")
+    .data(data)
+    .enter()
+    .append("circle")
+      .attr("class", function (d) { return "dot " + d.Publisher} )
+      .attr("cx", function (d) { return x(d.Year); } )
+      .attr("cy", function (d) { return y(d.Global_Sales); } )
+      .attr("r", 1.5)
+      .style("fill", function (d) {return color(d.Publisher); })
+      .style("stroke", "black")
+      .style("stroke-width",0.25)
+    .on("click", highlight)
+    .on("mouseleave", doNotHighlight )
+
+svg.append("rect")
+    .attr("x",40)
+    .attr("y",0)
+    .attr("width",130)
+    .attr("height",80)
+    .style("fill", "floralwhite")
+    .style("stroke","black")
+    .style("stroke-width",1);
+
+
+    // Add one dot in the legend for each name.
+svg.selectAll("mydots")
+  .data([{Publisher: 'Nintendo'}, {Publisher:"Electronic Arts"}, {Publisher:'Activision'},
+       {Publisher:"Sony Computer Entertainment"}, {Publisher:'Ubisoft'}])
+  .enter()
+  .append("circle")
+    .attr("class", function (d) { return "dot " + d.Publisher.replace(/ .*/,'') } )
+    .attr("cx", 50)
+    .attr("cy", function(d,i){ return 10 + i*15}) // 100 is where the first dot appears. 25 is the distance between dots
+    .attr("r", 1.5)
+    .style("fill", function (d) { return color(d.Publisher); })
+    .style("stroke", "black")
+    .style("stroke-width", 0.25)
+    .on("click", highlightLegend)
+    .on("mouseleave", doNotHighlightLegend)
+
+
+// Add one dot in the legend for each name.
+svg.selectAll("mylabels")
+  .data([{Publisher: 'Nintendo'}, {Publisher:'Electronic Arts'}, {Publisher:'Activision'},
+       {Publisher:'Sony Computer Entertainment'}, {Publisher:'Ubisoft'}])
+  .enter()
+  .append("text")
+    .attr("class", function (d) { return "dot " + d.Publisher.replace(/ .*/,'') } )
+    .text(function(d){return d.Publisher})
+    .attr("x", 60)
+    .attr("y", function(d,i){ return 11 + i*15}) // 100 is where the first dot appears. 25 is the distance between dots
+    .style("fill", function(d){ return color(d.Publisher)})
+    .attr("text-anchor", "left")
+    .style("alignment-baseline", "middle")
+    .style("font-size", "8px")
+    .style("stroke", "black")
+    .style("stroke-width",0.1)
+    .on("click", highlightLegend)
+    .on("mouseleave", doNotHighlightLegend)
+
+
+})
+
+
+
+
+</script>
